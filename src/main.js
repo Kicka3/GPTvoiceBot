@@ -35,7 +35,7 @@ bot.on(message('voice'), async (ctx) => {
         const mp3Path = await ogg.toMp3(oggPath, userId);
 
         const text = await openai.transcription(mp3Path);
-        await ctx.reply(code(`Ваш запрос: ${text}`))
+        await ctx.reply(code(`Ваш запрос: "${text}"`))
 
         ctx.session.messages.push({ role: openai.roles.USER, content: text });
         const response = await openai.chat(ctx.session.messages);
@@ -53,17 +53,23 @@ bot.on(message('text'), async (ctx) => {
     ctx.session ??= INITIAL_SESSION
     try {
         await ctx.reply(code('Сообщение формируется...'));
-        const text = await openai.transcription(ctx.message.text);
 
-        ctx.session.messages.push({ role: openai.roles.USER, content: text });
-        const response = await openai.chat(ctx.session.messages);
-        ctx.session.messages.push({ role: openai.roles.ASSISTANT, content: response.content });
+        ctx.session.messages.push({ 
+            role: openai.roles.USER, 
+            content: ctx.message.text,
+        });
+        const response = await openai.chat(ctx.session.messages)
+
+        ctx.session.messages.push({ 
+            role: openai.roles.ASSISTANT, 
+            content: response.content,
+        });
 
         await ctx.reply(response.content)
     } catch (e) {
-        console.log('Error while voice message', e.message);
+        console.log('Error while voice message', e.message)
     }
-})
+});
 
 bot.launch();
 
